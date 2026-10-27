@@ -48,10 +48,10 @@
       // 侧边栏压得比大背景更透，才能透过毛玻璃看见壁纸的色块
       '--sidebar-bg': -0.22, '--chat-bg': -0.34, '--surface': 0.10, '--panel': 0.10
     };
-    // v4：再换 key，让旧的偏暗数值失效
-    var OPACITY_KEY = 'rxwp.opacity.v4';
-    // 0.42：壁纸当主角，聊天区几乎全裸。觉得太亮就往右拖滑块。
-    var OPACITY_DEFAULT = 0.42;
+    // v5：再换 key，让旧的偏高数值失效
+    var OPACITY_KEY = 'rxwp.opacity.v5';
+    // 0.32：壁纸当主角。觉得看不清字就往右拖滑块。
+    var OPACITY_DEFAULT = 0.32;
 
     function baseOpacity() {
       var v = parseFloat(localStorage.getItem(OPACITY_KEY));

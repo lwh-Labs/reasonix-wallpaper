@@ -37,27 +37,27 @@ body {
  * 一块纯色，看起来跟实心板没区别。8~12px 才有"透过去但看不清细节"的玻璃感。 */
 
 .sidebar {
-  backdrop-filter: blur(9px) saturate(1.25);
-  -webkit-backdrop-filter: blur(9px) saturate(1.25);
+  backdrop-filter: blur(6px) saturate(1.25);
+  -webkit-backdrop-filter: blur(6px) saturate(1.25);
 }
 
 .workspace-panel {
-  backdrop-filter: blur(10px) saturate(1.2);
-  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(7px) saturate(1.2);
+  -webkit-backdrop-filter: blur(7px) saturate(1.2);
 }
 
 /* 输入区：底色调薄一点，让壁纸的色块透上来 */
 .composer-card,
 .composer-wrap--hero {
-  background: rgba(20, 25, 34, 0.34) !important;
-  backdrop-filter: blur(12px) saturate(1.3);
-  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  background: rgba(20, 25, 34, 0.22) !important;
+  backdrop-filter: blur(8px) saturate(1.3);
+  -webkit-backdrop-filter: blur(8px) saturate(1.3);
 }
 
 .composer__input,
 .composer__rich-input {
-  backdrop-filter: blur(12px) saturate(1.3);
-  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  backdrop-filter: blur(8px) saturate(1.3);
+  -webkit-backdrop-filter: blur(8px) saturate(1.3);
 }
 
 /* 聊天内容区：透明，让壁纸当主角 */
@@ -74,15 +74,15 @@ body {
  * 这里的值只是兜底，运行时由 JS 按滑块写入内联样式。
  * 记住：不透明度越高壁纸越看不见 —— 想看见壁纸要调低这个数，不是调高。 */
 :root {
-  --bg: rgba(7, 8, 11, 0.42) !important;
-  --bg-soft: rgba(13, 17, 23, 0.46) !important;
-  --bg-elev: rgba(20, 25, 34, 0.52) !important;
-  --bg-elev-2: rgba(34, 38, 49, 0.56) !important;
-  --sidebar-bg: rgba(10, 13, 18, 0.32) !important;
-  --chat-bg: rgba(7, 8, 11, 0.08) !important;
-  --surface: rgba(20, 25, 34, 0.52) !important;
-  --panel: rgba(20, 25, 34, 0.52) !important;
-  --code-bg: rgba(17, 19, 25, 0.66) !important;
+  --bg: rgba(7, 8, 11, 0.32) !important;
+  --bg-soft: rgba(13, 17, 23, 0.36) !important;
+  --bg-elev: rgba(20, 25, 34, 0.42) !important;
+  --bg-elev-2: rgba(34, 38, 49, 0.46) !important;
+  --sidebar-bg: rgba(10, 13, 18, 0.10) !important;
+  --chat-bg: rgba(7, 8, 11, 0.05) !important;
+  --surface: rgba(20, 25, 34, 0.42) !important;
+  --panel: rgba(20, 25, 34, 0.42) !important;
+  --code-bg: rgba(17, 19, 25, 0.56) !important;
   --workspace-preview-bg: transparent !important;
 }
 
