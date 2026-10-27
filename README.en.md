@@ -152,18 +152,34 @@ Sakura   → 3507×2200
 
 Converted to 2560-wide JPEGs, cached per id in `hero/`, so subsequent runs are instant. 22 of 31 scene wallpapers yield a usable layer.
 
-### 5. Blur in the wrong place destroys the wallpaper
+### 5. Blur radius has to match the container size
 
-The easiest mistake to make. First attempt applied `backdrop-filter: blur(24px)` to `#root` — "soften the background so text stays readable."
+Two traps here, both from `backdrop-filter`. This one took several rounds to get right.
 
-Result: **the entire wallpaper collapsed into a muddy smear.**
+**Trap 1: blurring the content area ruins the wallpaper**
 
-The correct approach is layered:
+First attempt applied `blur(24px)` to `#root` — "soften the background so text stays readable." Result: **the entire wallpaper collapsed into a muddy smear.**
+
+Rule: `backdrop-filter` belongs on small floating surfaces only. Content areas must be fully transparent.
+
+**Trap 2: too much radius is the same as none**
+
+After layering correctly, the sidebar was set to `blur(22px)`. But the sidebar is only ~280px wide — 22px of blur mushes everything behind it into a **single flat color**, indistinguishable from a solid panel. All that work, no visible difference.
+
+This is worst on **high-detail backdrops**. Starfields and falling petals are "dark base + dense small highlights" — one pass of blur spreads those highlights out and the whole thing flattens to a uniform color. Measured: **6px is already enough to erase them.**
+
+Radius should scale with the element:
+
+| Element | Width | Blur | Background |
+|---|---|---|---|
+| `.sidebar` | ~280px | **2.5px** | `rgba(10,13,18,.05)` |
+| `.composer-card` | ~600px | **3px** | `rgba(20,25,34,.10)` |
+| `.workspace-panel` | ~300px | **3px** | `rgba(11,15,21,.07)` |
 
 ```css
-/* frosted glass on floating surfaces */
-.sidebar, .composer-card, .workspace-panel {
-  backdrop-filter: blur(22px) saturate(1.3);
+.sidebar {
+  background: rgba(10, 13, 18, 0.05) !important;
+  backdrop-filter: blur(2.5px) saturate(1.2);
 }
 
 /* content areas stay fully transparent */
@@ -173,9 +189,11 @@ The correct approach is layered:
 
 /* readability via shadow, not by darkening the backdrop */
 body {
-  text-shadow: 0 1px 2px rgba(0,0,0,.6);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .6), 0 0 1px rgba(0, 0, 0, .45);
 }
 ```
+
+Paired with `filter: brightness(1.32) saturate(1.2)` on the wallpaper layer — brightening the source directly beats "reducing the scrim", and doesn't drag other layers along with it.
 
 The class names were extracted from Reasonix's own CSS bundle (`styles-*.css`, 851 KB, 3,930 class names).
 

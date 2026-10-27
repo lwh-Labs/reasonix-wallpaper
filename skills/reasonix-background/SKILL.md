@@ -61,11 +61,21 @@ Reasonix 用自定义协议 + `protocol.handle` 从 distRoot 提供页面，`fil
 
 试过 `127.0.0.1` 服务供图，但进程会掉线（PowerShell `Start-Process` 的子进程随会话回收，换 WMI 启动也不稳），不如 Junction 干净。
 
-**3. 模糊加在浮层，不能加在内容区**
+**3. 模糊加在浮层，且半径要跟容器尺寸匹配**
 
-给 `#root` 加 `backdrop-filter` 会把整张壁纸糊成一团色块。正确做法：
+两个坑：
 
-- `.sidebar` / `.composer-card` / `.workspace-panel` → 毛玻璃
+- 给 `#root` 加 `backdrop-filter` 会把整张壁纸糊成一团色块 → 只加在小面积浮层上
+- 半径给大了等于没加：侧边栏才 ~280px 宽，22px 模糊会把背景揉成**单一色值**，看着跟实心板一样。高细节背景（星空/落樱）尤其明显，**6px 就已经糊没了**
+
+实测档位：
+
+| 元素 | 模糊 | 底色 |
+| --- | --- | --- |
+| `.sidebar` | 2.5px | `rgba(10,13,18,.05)` |
+| `.composer-card` | 3px | `rgba(20,25,34,.10)` |
+| `.workspace-panel` | 3px | `rgba(11,15,21,.07)` |
+
 - `.chat-pane` / `.chat-transcript` → 完全透明
 - 文字可读性靠 `text-shadow`，**不要**靠加深背景
 
