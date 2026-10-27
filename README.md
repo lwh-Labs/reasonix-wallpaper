@@ -1,5 +1,7 @@
 # Reasonix Wallpaper
 
+**中文** | [English](./README.en.md)
+
 把 **Wallpaper Engine** 的壁纸搬进 **Reasonix** 桌面端的界面里，当动态背景用。
 
 附赠一个管理 Windows 桌面壁纸的能力。
