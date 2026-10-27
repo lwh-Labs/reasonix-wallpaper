@@ -387,8 +387,14 @@
       grid.appendChild(frag);
     }
 
-    // ---------- 悬浮按钮 ----------
+    // ---------- 入口：只有快捷键 ----------
+    // 悬浮按钮已移除，改用 Ctrl+Alt+W 召唤。
+    // 想恢复按钮的话，把下面 SHOW_BUTTON 改成 true 即可。
+    var SHOW_BUTTON = false;
+    var HINT_KEY = 'rxwp.hint.v1';
+
     function buildButton() {
+      if (!SHOW_BUTTON) return;
       if (document.getElementById(BTN_ID)) return;
       var b = document.createElement('button');
       b.id = BTN_ID;
@@ -399,6 +405,18 @@
         '<path fill="currentColor" d="M21 4H3a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1Zm-1 14H4v-5.6l4.5-4.5 4 4 3-3L20 15v3Zm-3.5-8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg>';
       b.addEventListener('click', togglePanel);
       document.body.appendChild(b);
+    }
+
+    // 没有按钮了，第一次装完提示一次快捷键，否则用户不知道入口在哪
+    function maybeShowHint() {
+      if (SHOW_BUTTON) return;
+      try {
+        if (localStorage.getItem(HINT_KEY)) return;
+        localStorage.setItem(HINT_KEY, '1');
+      } catch (_) { return; }
+      setTimeout(function () {
+        toast('壁纸已就绪 · 按 Ctrl + Alt + W 打开面板');
+      }, 1800);
     }
 
     function togglePanel() {
@@ -442,6 +460,7 @@
       ensureBg();
       buildButton();
       restore();
+      maybeShowHint();
       console.log('[rxwp] 就绪，壁纸 ' + DATA.length + ' 张；Ctrl+Alt+W 打开面板');
     }
 

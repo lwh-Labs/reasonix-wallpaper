@@ -28,7 +28,7 @@ So this plugin takes the **`index.html` injection** route: it appends a pure-DOM
 | | |
 |---|---|
 | **App background** | Reads your WE library; supports static layers, animated GIFs, and video |
-| **Floating panel** | Bottom-right button or `Ctrl+Alt+W`, thumbnail grid, click a card to switch instantly |
+| **Floating panel** | `Ctrl+Alt+W` to summon, thumbnail grid, click a card to switch instantly |
 | **Adjustable opacity** | Slider 20%–100%, live, persisted |
 | **Hi-res extraction** | Pulls original-resolution layers out of `scene.pkg` — ~20× sharper than WE's own 256×256 previews |
 | **Desktop wallpaper** | Bonus: switch your Windows desktop wallpaper via CLI or a thumbnail page |
@@ -54,11 +54,11 @@ reasonix plugin install https://github.com/lwh-Labs/reasonix-wallpaper --yes
 # 3) restart Reasonix (or press Ctrl+R)
 ```
 
-A wallpaper button appears in the bottom-right corner.
+Press `Ctrl + Alt + W` to open the wallpaper panel. A one-time hint appears after a fresh install.
 
 ## Usage
 
-- **Change background** — click the bottom-right button, then any card
+- **Change background** — `Ctrl+Alt+W`, then click any card
 - **Adjust opacity** — slider at the bottom of the panel; drag left for a more visible wallpaper
 - **Quick toggle** — `Ctrl + Alt + W`
 - **Turn off** — "关闭壁纸引擎" at the bottom of the panel; `Ctrl+Alt+W` brings it back

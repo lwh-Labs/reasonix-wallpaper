@@ -146,7 +146,10 @@ html[data-rxwp-active]::before {
   pointer-events: none;
 }
 
-/* ============ 4. 悬浮按钮 ============ */
+/* ============ 4. 悬浮按钮（默认关闭）============
+ * 入口已改为 Ctrl+Alt+W，这里保留样式供 rx-wallpaper.js 里
+ * SHOW_BUTTON = true 时使用。 */
+
 #rxwp-btn {
   position: fixed;
   right: 18px;
