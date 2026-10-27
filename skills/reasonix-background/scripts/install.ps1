@@ -390,5 +390,5 @@ if ($html.Contains('</body>')) {
 Write-Output "  已注入 index.html"
 
 Write-Output ""
-Write-Output "完成。重启 Reasonix 后，右下角会出现壁纸按钮。"
+Write-Output "完成。重启 Reasonix 后按 Ctrl+Alt+W 打开壁纸面板（没有悬浮按钮）。"
 Write-Output "不满意就跑： .\install.ps1 -Restore"
