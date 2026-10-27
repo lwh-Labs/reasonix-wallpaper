@@ -1,0 +1,19 @@
+# 依赖
+node_modules/
+
+# 日志
+*.log
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+
+# 本地临时产物（壁纸提取缓存等不该进仓库）
+__rxwallpaper/
+*.reasonix-theme

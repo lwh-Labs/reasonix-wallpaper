@@ -1,0 +1,10 @@
+{
+  "apiVersion": "reasonix.io/plugin/v2",
+  "name": "reasonix-wallpaper",
+  "version": "1.0.0",
+  "description": "把 Wallpaper Engine 的壁纸带进 Reasonix 界面当动态背景（悬浮面板选图、调透明度、支持视频），同时可以管理 Windows 桌面壁纸。",
+  "skills": [
+    "skills/reasonix-background",
+    "skills/desktop-wallpaper"
+  ]
+}

@@ -1,0 +1,469 @@
+/* Reasonix × Wallpaper Engine —— 注入样式
+ *
+ * 三部分：
+ *   1. 默认动效背景（没选壁纸时）
+ *   2. 壁纸背景层 #rxwp-bg（选了壁纸时，支持 video / image）
+ *   3. 悬浮按钮 + 壁纸选择面板
+ *
+ * 卸载：inject\apply.ps1 -Restore
+ */
+
+/* ============ 1. 让底层透出来 ============ */
+html,
+body {
+  background: transparent !important;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+  /* 这里绝对不能加 backdrop-filter：
+   * 整块内容区一旦模糊，壁纸本身就毁了，只剩一团色块。
+   * 毛玻璃只该出现在小面积浮层上（侧边栏、输入框、卡片）。 */
+}
+
+/* 文字阴影：壁纸透上来之后，靠它保证任何底色下都读得清。
+ * 这比"加深背景"高明——加深背景等于又一次把壁纸盖掉。 */
+body {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+/* ============ 毛玻璃浮层 ============
+ * 类名取自 Reasonix 自己的样式产物（styles-DqzDRayG.css / AppRuntimeView.css）。
+ * 原则：backdrop-filter 只加在小面积浮层上，铺到内容区就会毁掉壁纸。
+ * 这里只加模糊、不改背景色 —— 底色仍由 --sidebar-bg 等变量按滑块控制。 */
+
+.sidebar {
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+}
+
+.workspace-panel {
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+}
+
+/* 输入区：DSH 里最有质感的一块 */
+.composer-card,
+.composer-wrap--hero,
+.composer__input,
+.composer__rich-input {
+  backdrop-filter: blur(24px) saturate(1.35);
+  -webkit-backdrop-filter: blur(24px) saturate(1.35);
+}
+
+/* 聊天内容区：透明，让壁纸当主角 */
+.chat-pane,
+.chat-surface,
+.chat-transcript {
+  background: transparent !important;
+}
+
+/* 面板底色半透明。
+ * 必须 !important：Reasonix 的样式表是运行时注入的，顺序在我们的 <link> 之后，
+ * 同特异性下它会赢，导致这里的覆盖全部失效。
+ *
+ * 这里的值只是兜底，运行时由 JS 按滑块写入内联样式。
+ * 记住：不透明度越高壁纸越看不见 —— 想看见壁纸要调低这个数，不是调高。 */
+:root {
+  --bg: rgba(7, 8, 11, 0.42) !important;
+  --bg-soft: rgba(13, 17, 23, 0.46) !important;
+  --bg-elev: rgba(20, 25, 34, 0.52) !important;
+  --bg-elev-2: rgba(34, 38, 49, 0.56) !important;
+  --sidebar-bg: rgba(10, 13, 18, 0.32) !important;
+  --chat-bg: rgba(7, 8, 11, 0.08) !important;
+  --surface: rgba(20, 25, 34, 0.52) !important;
+  --panel: rgba(20, 25, 34, 0.52) !important;
+  --code-bg: rgba(17, 19, 25, 0.66) !important;
+  --workspace-preview-bg: transparent !important;
+}
+
+/* ============ 2. 默认动效背景 ============ */
+html::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 42% at 22% 26%, rgba(77, 214, 232, 0.30), transparent 70%),
+    radial-gradient(42% 46% at 78% 72%, rgba(122, 82, 205, 0.26), transparent 70%),
+    radial-gradient(30% 34% at 62% 8%, rgba(255, 148, 88, 0.15), transparent 70%),
+    radial-gradient(34% 38% at 12% 88%, rgba(38, 92, 165, 0.20), transparent 70%),
+    radial-gradient(120% 120% at 50% 50%, #0a0d14 0%, #07080b 70%);
+  animation: rx-wallpaper-drift 42s ease-in-out infinite alternate;
+  will-change: transform;
+  transition: opacity .6s ease;
+}
+
+/* 选了壁纸就淡出默认背景 */
+html[data-rxwp-active]::before {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes rx-wallpaper-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-3%, 2%, 0) scale(1.06); }
+  100% { transform: translate3d(3%, -2%, 0) scale(1.03); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html::before { animation: none; }
+}
+
+/* ============ 3. 壁纸背景层 ============ */
+#rxwp-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #06070a;
+}
+
+#rxwp-bg > video,
+#rxwp-bg > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+  /* 壁纸本身直接提亮提饱和：比"减少遮罩"更有效，而且不会连带影响别的层。
+   * 觉得太亮/太艳就把这两个值往 1 收。 */
+  filter: brightness(1.18) saturate(1.15) contrast(1.03);
+}
+
+/* 背景上的暗色遮罩。只留很薄的一层，纯粹为了压住最亮的区域。
+ * 它和面板不透明度是乘法关系，两边都重就等于把壁纸完全抹掉。 */
+#rxwp-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 7, 10, 0.06), rgba(6, 7, 10, 0.18));
+  pointer-events: none;
+}
+
+/* ============ 4. 悬浮按钮 ============ */
+#rxwp-btn {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2147482000;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(18, 24, 33, .82);
+  color: #b8e8f2;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .45);
+  transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+
+#rxwp-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(30, 42, 55, .92);
+  border-color: rgba(77, 214, 232, .5);
+  color: #7fe6f4;
+}
+
+/* ============ 5. 选择面板 ============ */
+#rxwp-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -48%) scale(.98);
+  width: min(1080px, 92vw);
+  height: min(720px, 82vh);
+  z-index: 2147483000;
+  display: none;
+  flex-direction: column;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(11, 15, 21, .92);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .7);
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity .18s ease, transform .18s ease;
+  font: 13px/1.5 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: #e6edf6;
+}
+
+#rxwp-panel.rxwp-panel--open {
+  display: flex;
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.rxwp-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  flex: 0 0 auto;
+}
+
+.rxwp-title {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: .2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rxwp-count {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: #8b98ab;
+  background: rgba(255, 255, 255, .07);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.rxwp-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rxwp-search {
+  width: 190px;
+  padding: 7px 11px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .05);
+  color: #e6edf6;
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.rxwp-search:focus {
+  border-color: rgba(77, 214, 232, .6);
+  box-shadow: 0 0 0 3px rgba(77, 214, 232, .13);
+}
+
+.rxwp-select {
+  padding: 7px 9px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .05);
+  color: #e6edf6;
+  font-size: 12.5px;
+  outline: none;
+  cursor: pointer;
+}
+
+.rxwp-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .05);
+  color: #cfd8e4;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+
+.rxwp-close:hover {
+  background: rgba(224, 105, 106, .22);
+  color: #ffd7d9;
+}
+
+.rxwp-grid {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 14px 16px 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  gap: 13px;
+  align-content: start;
+}
+
+.rxwp-grid::-webkit-scrollbar { width: 9px; }
+.rxwp-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .14);
+  border-radius: 6px;
+}
+.rxwp-grid::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .22); }
+
+.rxwp-card {
+  border-radius: 11px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .045);
+  border: 1px solid rgba(255, 255, 255, .08);
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.rxwp-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, .2);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, .5);
+}
+
+.rxwp-card--active {
+  border-color: #4dd6e8;
+  box-shadow: 0 0 0 1px #4dd6e8, 0 10px 24px rgba(77, 214, 232, .2);
+}
+
+.rxwp-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #0d1117;
+  overflow: hidden;
+}
+
+.rxwp-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.rxwp-badge {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(8, 12, 18, .8);
+  border: 1px solid rgba(255, 255, 255, .14);
+  color: #cfe4f5;
+  backdrop-filter: blur(4px);
+}
+
+.rxwp-badge--scene { color: #9fe6f4; border-color: rgba(77, 214, 232, .45); }
+.rxwp-badge--video { color: #ffc9a8; border-color: rgba(255, 160, 110, .45); }
+
+.rxwp-now {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  font-size: 10.5px;
+  font-weight: 650;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(77, 214, 232, .94);
+  color: #06232a;
+}
+
+.rxwp-name {
+  padding: 8px 9px 9px;
+  font-size: 12px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.5em;
+  color: #d3dde9;
+}
+
+.rxwp-foot {
+  flex: 0 0 auto;
+  padding: 9px 16px;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+  font-size: 11.5px;
+  color: #7e8b9d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.rxwp-off {
+  flex: 0 0 auto;
+  padding: 5px 13px;
+  border-radius: 8px;
+  border: 1px solid rgba(224, 105, 106, .35);
+  background: rgba(224, 105, 106, .12);
+  color: #ffb4b8;
+  font-size: 11.5px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+
+/* 不透明度滑块 */
+.rxwp-opacity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  color: #8b98ab;
+  font-size: 11.5px;
+  user-select: none;
+}
+
+.rxwp-opacity input[type="range"] {
+  width: 104px;
+  accent-color: #4dd6e8;
+  cursor: pointer;
+}
+
+.rxwp-opacity b {
+  min-width: 36px;
+  text-align: right;
+  color: #c3d2e2;
+  font-weight: 500;
+}
+
+.rxwp-off:hover {
+  background: rgba(224, 105, 106, .26);
+  border-color: rgba(224, 105, 106, .6);
+  color: #ffd7d9;
+}
+
+.rxwp-nothumb {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #66738a;
+  font-size: 11.5px;
+  background: #0d1117;
+}
+
+.rxwp-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #7e8b9d;
+  padding: 50px 0;
+}
+
+/* ============ 6. toast ============ */
+#rxwp-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 74px;
+  transform: translateX(-50%) translateY(14px);
+  z-index: 2147483600;
+  padding: 9px 16px;
+  border-radius: 10px;
+  background: rgba(16, 34, 42, .96);
+  border: 1px solid rgba(77, 214, 232, .5);
+  color: #cdf6fd;
+  font: 12.5px/1.4 system-ui, "Microsoft YaHei", sans-serif;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+}
+
+#rxwp-toast.rxwp-toast--show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

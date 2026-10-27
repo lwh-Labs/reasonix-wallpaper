@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>壁纸选择器 · Wallpaper Engine</title>
+<style>
+  :root {
+    --bg-0: #0b0e13;
+    --bg-1: #141922;
+    --card: #1a212c;
+    --card-hi: #222b39;
+    --line: #2a3444;
+    --text: #e6edf6;
+    --muted: #8b98ab;
+    --accent: #4dd6e8;
+    --accent-dim: #1d4f57;
+    --shadow: 0 8px 24px rgba(0, 0, 0, .45);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(1200px 600px at 20% -10%, #17303a 0%, transparent 55%),
+                radial-gradient(900px 500px at 100% 0%, #1a2438 0%, transparent 50%),
+                var(--bg-0);
+    color: var(--text);
+    font: 14px/1.5 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+    padding-bottom: 48px;
+  }
+
+  header {
+    position: sticky; top: 0; z-index: 20;
+    backdrop-filter: blur(14px);
+    background: linear-gradient(180deg, rgba(11,14,19,.94), rgba(11,14,19,.78));
+    border-bottom: 1px solid var(--line);
+    padding: 14px 22px 12px;
+  }
+  .head-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .3px; }
+  h1 .dot { color: var(--accent); }
+  .stat { color: var(--muted); font-size: 12.5px; }
+  .spacer { flex: 1; }
+
+  .now {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--accent-dim); border: 1px solid #2f7a86;
+    color: #bdf3fb; padding: 6px 12px; border-radius: 999px; font-size: 12.5px;
+    max-width: 46vw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .now b { font-weight: 600; color: #e8fdff; }
+
+  .controls { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  input[type=search], select {
+    background: #10161f; color: var(--text);
+    border: 1px solid var(--line); border-radius: 9px;
+    padding: 9px 12px; font-size: 13.5px; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type=search]:focus, select:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(77,214,232,.13);
+  }
+  input[type=search] { width: 260px; }
+  select { cursor: pointer; }
+
+  main {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(212px, 1fr));
+    gap: 16px;
+    padding: 20px 22px;
+  }
+
+  .card {
+    position: relative; border-radius: 12px; overflow: hidden;
+    background: var(--card); border: 1px solid var(--line);
+    cursor: pointer; box-shadow: var(--shadow);
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    display: flex; flex-direction: column;
+  }
+  .card:hover { transform: translateY(-3px); border-color: #3d4c62; box-shadow: 0 14px 30px rgba(0,0,0,.55); }
+  .card:active { transform: translateY(-1px) scale(.995); }
+
+  .card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 10px 26px rgba(77,214,232,.18); }
+
+  .thumb {
+    aspect-ratio: 16 / 9; width: 100%; object-fit: cover;
+    background: #0e131b; display: block;
+  }
+  .thumb-wrap { position: relative; }
+  .badge {
+    position: absolute; top: 8px; right: 8px;
+    font-size: 11px; padding: 3px 8px; border-radius: 6px;
+    background: rgba(10,14,20,.82); border: 1px solid rgba(255,255,255,.14);
+    color: #cfe4f5; letter-spacing: .2px; backdrop-filter: blur(4px);
+  }
+  .badge.scene { color: #9fe6f4; border-color: rgba(77,214,232,.45); }
+  .badge.video { color: #ffc9a8; border-color: rgba(255,160,110,.45); }
+  .badge.web   { color: #c3b2ff; border-color: rgba(160,140,255,.45); }
+  .playing {
+    position: absolute; top: 8px; left: 8px;
+    font-size: 11px; padding: 3px 8px; border-radius: 6px;
+    background: rgba(77,214,232,.92); color: #06232a; font-weight: 650;
+  }
+
+  .meta { padding: 9px 11px 11px; }
+  .title {
+    font-size: 13px; line-height: 1.35; font-weight: 500;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; min-height: 2.7em;
+  }
+  .tags { margin-top: 6px; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .empty { grid-column: 1/-1; text-align: center; color: var(--muted); padding: 60px 0; }
+
+  .busy { opacity: .45; pointer-events: none; }
+  .card .spinner {
+    position: absolute; inset: 0; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(8,11,16,.72); font-size: 12.5px; color: var(--accent);
+  }
+  .card.loading .spinner { display: flex; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px);
+    background: #10222a; border: 1px solid #2f7a86; color: #cdf6fd;
+    padding: 10px 18px; border-radius: 10px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: opacity .22s, transform .22s;
+    box-shadow: var(--shadow); max-width: 80vw;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.err { background: #2a1416; border-color: #7a3238; color: #ffd6da; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <h1>壁纸引擎<span class="dot">.</span></h1>
+    <span class="stat" id="stat">加载中…</span>
+    <span class="spacer"></span>
+    <div class="now" id="now" hidden>正在播放：<b id="nowTitle"></b></div>
+  </div>
+  <div class="controls">
+    <input type="search" id="q" placeholder="搜索标题或 ID…" autocomplete="off">
+    <select id="type">
+      <option value="">全部类型</option>
+      <option value="scene">场景</option>
+      <option value="video">视频</option>
+      <option value="web">网页</option>
+      <option value="application">程序</option>
+    </select>
+    <select id="monitor">
+      <option value="all">所有显示器</option>
+    </select>
+  </div>
+</header>
+
+<main id="grid"><div class="empty">正在读取壁纸库…</div></main>
+<div id="toast"></div>
+
+<script>
+const TYPE_LABEL = { scene: '场景', video: '视频', web: '网页', application: '程序' };
+
+let ITEMS = [];
+let CURRENT = {};
+
+const gridEl = document.getElementById('grid');
+const qEl = document.getElementById('q');
+const typeEl = document.getElementById('type');
+const monEl = document.getElementById('monitor');
+const statEl = document.getElementById('stat');
+const nowEl = document.getElementById('now');
+const nowTitleEl = document.getElementById('nowTitle');
+const toastEl = document.getElementById('toast');
+
+function toast(msg, isErr) {
+  toastEl.textContent = msg;
+  toastEl.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toastEl.className = isErr ? 'err' : ''; }, 2600);
+}
+
+function activeIds() {
+  return new Set(Object.values(CURRENT).filter(Boolean));
+}
+
+function render() {
+  const q = qEl.value.trim().toLowerCase();
+  const t = typeEl.value;
+  const active = activeIds();
+
+  const rows = ITEMS.filter((it) => {
+    if (t && it.type !== t) return false;
+    if (!q) return true;
+    return it.title.toLowerCase().includes(q) || it.id.includes(q);
+  });
+
+  statEl.textContent = `${rows.length} / ${ITEMS.length} 张`;
+
+  const firstActive = ITEMS.find((it) => active.has(it.id));
+  if (firstActive) {
+    nowEl.hidden = false;
+    nowTitleEl.textContent = firstActive.title;
+  } else {
+    nowEl.hidden = true;
+  }
+
+  if (!rows.length) {
+    gridEl.innerHTML = '<div class="empty">没有匹配的壁纸</div>';
+    return;
+  }
+
+  gridEl.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  for (const it of rows) {
+    const card = document.createElement('div');
+    card.className = 'card' + (active.has(it.id) ? ' active' : '');
+    card.dataset.id = it.id;
+    card.title = `${it.title}\nID: ${it.id}\n类型: ${TYPE_LABEL[it.type] || it.type}\n标签: ${it.tags.join(' / ') || '—'}`;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'thumb-wrap';
+
+    const img = document.createElement('img');
+    img.className = 'thumb';
+    img.loading = 'lazy';
+    img.alt = it.title;
+    img.src = `/thumb/${encodeURIComponent(it.id)}`;
+    img.onerror = () => { img.style.visibility = 'hidden'; };
+    wrap.appendChild(img);
+
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + it.type;
+    badge.textContent = TYPE_LABEL[it.type] || it.type;
+    wrap.appendChild(badge);
+
+    if (active.has(it.id)) {
+      const play = document.createElement('span');
+      play.className = 'playing';
+      play.textContent = '播放中';
+      wrap.appendChild(play);
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = it.title;
+    const tags = document.createElement('div');
+    tags.className = 'tags';
+    tags.textContent = it.tags.length ? it.tags.join(' · ') : '—';
+    meta.append(title, tags);
+
+    const spin = document.createElement('div');
+    spin.className = 'spinner';
+    spin.textContent = '切换中…';
+
+    card.append(wrap, meta, spin);
+    card.addEventListener('click', () => apply(it, card));
+    frag.appendChild(card);
+  }
+  gridEl.appendChild(frag);
+}
+
+async function apply(item, card) {
+  if (card.classList.contains('loading')) return;
+  card.classList.add('loading');
+  gridEl.classList.add('busy');
+  try {
+    const res = await fetch('/api/apply', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: item.id, monitor: monEl.value }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '切换失败');
+    CURRENT = data.current || {};
+    toast(`已切换到「${data.title}」`);
+    render();
+  } catch (err) {
+    toast(String(err.message || err), true);
+  } finally {
+    card.classList.remove('loading');
+    gridEl.classList.remove('busy');
+  }
+}
+
+async function load() {
+  try {
+    const res = await fetch('/api/list');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '读取失败');
+    ITEMS = data.items || [];
+    CURRENT = data.current || {};
+
+    const mons = Object.keys(CURRENT).filter((k) => /^Monitor\d+$/.test(k)).sort();
+    for (const m of mons) {
+      const opt = document.createElement('option');
+      opt.value = m.replace('Monitor', '');
+      const hit = ITEMS.find((it) => it.id === CURRENT[m]);
+      opt.textContent = `只在 ${m}${hit ? ' · ' + hit.title.slice(0, 16) : ''}`;
+      monEl.appendChild(opt);
+    }
+
+    render();
+  } catch (err) {
+    gridEl.innerHTML = `<div class="empty">读取壁纸库失败：${String(err.message || err)}</div>`;
+    statEl.textContent = '加载失败';
+  }
+}
+
+qEl.addEventListener('input', render);
+typeEl.addEventListener('change', render);
+load();
+</script>
+</body>
+</html>
