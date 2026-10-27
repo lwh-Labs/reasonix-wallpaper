@@ -47,8 +47,8 @@ Reasonix 的插件机制只能贡献 skills / commands / hooks / MCP，没有 UI
 ## 安装
 
 ```powershell
-# 1) 装进 Reasonix
-reasonix plugin install D:\path\to\reasonix-wallpaper --yes
+# 1) 装进 Reasonix（直接从 GitHub）
+reasonix plugin install https://github.com/lwh-Labs/reasonix-wallpaper --yes
 
 # 2) 注入背景层
 & "<Reasonix home>\plugins\reasonix-wallpaper\skills\reasonix-background\scripts\install.ps1" -Apply

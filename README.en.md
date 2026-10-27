@@ -45,8 +45,8 @@ Paths default to `E:\Steam\steamapps\common\wallpaper_engine`. If yours differs,
 ## Install
 
 ```powershell
-# 1) install the plugin
-reasonix plugin install D:\path\to\reasonix-wallpaper --yes
+# 1) install the plugin straight from GitHub
+reasonix plugin install https://github.com/lwh-Labs/reasonix-wallpaper --yes
 
 # 2) inject the background layer
 & "<Reasonix home>\plugins\reasonix-wallpaper\skills\reasonix-background\scripts\install.ps1" -Apply
