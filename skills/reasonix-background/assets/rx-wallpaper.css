@@ -32,25 +32,32 @@ body {
 /* ============ 毛玻璃浮层 ============
  * 类名取自 Reasonix 自己的样式产物（styles-DqzDRayG.css / AppRuntimeView.css）。
  * 原则：backdrop-filter 只加在小面积浮层上，铺到内容区就会毁掉壁纸。
- * 这里只加模糊、不改背景色 —— 底色仍由 --sidebar-bg 等变量按滑块控制。 */
+ *
+ * 模糊半径要和容器尺寸匹配：侧边栏才 ~280px 宽，22px 的模糊会把背景糊成
+ * 一块纯色，看起来跟实心板没区别。8~12px 才有"透过去但看不清细节"的玻璃感。 */
 
 .sidebar {
-  backdrop-filter: blur(22px) saturate(1.3);
-  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  backdrop-filter: blur(9px) saturate(1.25);
+  -webkit-backdrop-filter: blur(9px) saturate(1.25);
 }
 
 .workspace-panel {
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
 }
 
-/* 输入区：DSH 里最有质感的一块 */
+/* 输入区：底色调薄一点，让壁纸的色块透上来 */
 .composer-card,
-.composer-wrap--hero,
+.composer-wrap--hero {
+  background: rgba(20, 25, 34, 0.34) !important;
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+}
+
 .composer__input,
 .composer__rich-input {
-  backdrop-filter: blur(24px) saturate(1.35);
-  -webkit-backdrop-filter: blur(24px) saturate(1.35);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
 }
 
 /* 聊天内容区：透明，让壁纸当主角 */

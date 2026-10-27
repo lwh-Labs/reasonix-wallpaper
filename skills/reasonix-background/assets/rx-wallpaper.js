@@ -45,7 +45,8 @@
     // 各变量相对基准值的偏移：聊天区最透（壁纸直接露出），浮层稍实
     var DELTA = {
       '--bg': 0, '--bg-soft': 0.04, '--bg-elev': 0.10, '--bg-elev-2': 0.14,
-      '--sidebar-bg': -0.10, '--chat-bg': -0.34, '--surface': 0.10, '--panel': 0.10
+      // 侧边栏压得比大背景更透，才能透过毛玻璃看见壁纸的色块
+      '--sidebar-bg': -0.22, '--chat-bg': -0.34, '--surface': 0.10, '--panel': 0.10
     };
     // v4：再换 key，让旧的偏暗数值失效
     var OPACITY_KEY = 'rxwp.opacity.v4';
